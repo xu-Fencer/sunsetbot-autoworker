@@ -1,0 +1,28 @@
+name: Call Sunset Worker twice a day
+
+on:
+  # 手动触发，方便调试
+  workflow_dispatch:
+
+  # 定时触发
+  schedule:
+  - cron: "40 17 * * *"   # 01:40 CST
+  - cron: "0 10 * * *"    # 18:00 CST
+
+
+
+jobs:
+  call-worker:
+    runs-on: ubuntu-latest
+    environment: run
+    steps:
+      - name: Call Cloudflare Worker
+        env:
+          WORKER_URL:  ${{ secrets.SUNSET_URL }}    # ← 换成你的 Worker URL
+          API_TOKEN:   ${{ secrets.SUNSET_API_TOKEN }}    # ← 在仓库 Settings → Secrets 添加
+        run: |
+          # 默认城市“陕西省-西安”；如要其它城市，把 QUERY 改掉或写多个 curl
+          CITY_PARAM=%E9%99%95%E8%A5%BF%E7%9C%81-%E8%A5%BF%E5%AE%89
+          curl --fail --silent --show-error \
+               -H "X-Token: $API_TOKEN" \
+               "$WORKER_URL?city=$CITY_PARAM"
